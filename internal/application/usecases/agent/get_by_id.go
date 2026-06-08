@@ -7,27 +7,25 @@ import (
 	"real-estate-agency-onion/internal/domain/repositories"
 )
 
-type DeactivateUseCase struct {
+type GetAgentByIDUseCase struct {
 	agentRepo repositories.AgentRepository
 }
 
-func NewDeactivateUseCase(agentRepo repositories.AgentRepository) *DeactivateUseCase {
-	return &DeactivateUseCase{
+func NewGetAgentByIDUseCase(agentRepo repositories.AgentRepository) *GetAgentByIDUseCase {
+	return &GetAgentByIDUseCase{
 		agentRepo: agentRepo,
 	}
 }
 
-func (uc *DeactivateUseCase) Execute(ctx context.Context, input dto.DeactivateAgentInput) error {
+func (uc *GetAgentByIDUseCase) Execute(ctx context.Context, input dto.GetAgentByIDInput) (*dto.AgentOutput, error) {
 	if input.ID <= 0 {
-		return domainerrors.ErrInvalidInput
+		return nil, domainerrors.ErrInvalidInput
 	}
 
 	agent, err := uc.agentRepo.GetByID(ctx, input.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	agent.Deactivate()
-
-	return uc.agentRepo.Update(ctx, agent)
+	out := toAgentOutput(agent)
+	return &out, nil
 }

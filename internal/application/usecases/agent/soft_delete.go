@@ -7,27 +7,29 @@ import (
 	"real-estate-agency-onion/internal/domain/repositories"
 )
 
-type DeactivateUseCase struct {
+type SoftDeleteUseCase struct {
 	agentRepo repositories.AgentRepository
 }
 
-func NewDeactivateUseCase(agentRepo repositories.AgentRepository) *DeactivateUseCase {
-	return &DeactivateUseCase{
+func NewSoftDeleteUseCase(agentRepo repositories.AgentRepository) *SoftDeleteUseCase {
+	return &SoftDeleteUseCase{
 		agentRepo: agentRepo,
 	}
 }
 
-func (uc *DeactivateUseCase) Execute(ctx context.Context, input dto.DeactivateAgentInput) error {
-	if input.ID <= 0 {
+func (uc *SoftDeleteUseCase) Execute(ctx context.Context, in dto.SoftDeleteAgentInput) error {
+	if in.ID <= 0 {
 		return domainerrors.ErrInvalidInput
 	}
 
-	agent, err := uc.agentRepo.GetByID(ctx, input.ID)
+	agent, err := uc.agentRepo.GetByID(ctx, in.ID)
 	if err != nil {
 		return err
 	}
 
-	agent.Deactivate()
+	if err := agent.SoftDelete(); err != nil {
+		return err
+	}
 
 	return uc.agentRepo.Update(ctx, agent)
 }
